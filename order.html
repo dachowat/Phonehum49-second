@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สั่งจอง | ใจดีมอเตอร์</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#3e6ae1;--ink:#171a20;--muted:#5c5e62;--panel:#f4f4f4;--line:#d0d1d2}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:'Prompt',sans-serif;color:var(--ink);background:#fff;padding-bottom:96px}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer}
+  :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+  .top{display:flex;justify-content:space-between;align-items:center;padding:22px 36px}
+  .logo{font-weight:600;letter-spacing:.25em}
+  .top a.back{font-size:.9rem;color:var(--muted)}
+
+  .layout{display:grid;grid-template-columns:1fr 440px;gap:32px;padding:0 36px 36px;align-items:start}
+
+  /* ซ้าย: รูปรถ + ป้ายจุดเด่น */
+  .stage{position:sticky;top:16px;min-height:520px;display:grid;place-items:center}
+  .carwrap{position:relative;width:min(100%,780px);padding:90px 0}
+  .carwrap svg{width:100%;height:auto;display:block;filter:drop-shadow(0 26px 18px rgba(0,0,0,.25));transition:color .3s}
+  .tag{position:absolute;font-size:.85rem;font-weight:500;color:#393c41;border-left:1px solid #aaa;padding:6px 0 6px 10px}
+  .t1{top:0;left:10%}.t2{top:0;right:10%}.t3{bottom:0;right:8%}.t4{bottom:0;left:4%}
+
+  /* ขวา: แผงเลือก */
+  .panel h1{font-size:2.2rem;font-weight:500;text-align:center;margin:6px 0 18px}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:16px}
+  .tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px;color:var(--muted);font-weight:500}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+  .box{background:var(--panel);border-radius:8px;padding:20px;margin-bottom:16px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+  .stats b{font-size:1.35rem;font-weight:500;display:block}
+  .stats span{font-size:.85rem;color:var(--muted)}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-bottom:10px}
+  .opt[aria-pressed="true"]{border:2px solid var(--ink);padding:13px 15px}
+  .opt .row{display:flex;justify-content:space-between;font-weight:500;font-size:.95rem}
+  .opt small{color:var(--muted);font-size:.8rem}
+  .box h2{font-size:1.4rem;font-weight:500;margin-bottom:12px}
+  .rowline{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;margin-bottom:12px}
+  .swatches{display:flex;gap:14px;flex-wrap:wrap}
+  .sw{width:38px;height:38px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+  .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
+  .field{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;margin-bottom:12px}
+  select,input{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff}
+  .note{font-size:.78rem;color:var(--muted)}
+  [hidden]{display:none!important}
+
+  /* แถบล่างติดจอ */
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 36px;z-index:5}
+  .bar h3{font-weight:500;font-size:1.15rem}
+  .bar small{color:var(--muted);font-size:.8rem}
+  .bar .price{text-align:right;font-size:1.3rem;font-weight:500}
+  .go{background:var(--blue);color:#fff;border:0;border-radius:4px;padding:12px 34px;font-weight:500}
+  .go:hover{filter:brightness(.95)}
+
+  dialog{border:0;border-radius:8px;padding:28px;width:min(92vw,420px);margin:auto}
+  dialog::backdrop{background:rgba(0,0,0,.5)}
+  dialog h2{font-weight:500;margin-bottom:6px}
+  dialog p{color:var(--muted);font-size:.9rem;margin-bottom:14px}
+  dialog input{width:100%;margin-bottom:12px}
+  .close{background:none;border:0;color:var(--muted);margin-top:10px;width:100%}
+
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;padding:0 16px 24px}
+    .stage{position:static;min-height:0}
+    .carwrap{padding:70px 0}
+    .top{padding:16px}
+    .bar{padding:12px 16px}.bar small{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){.carwrap svg{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="logo" href="index.html">ใจดีมอเตอร์</a>
+  <a class="back" href="index.html">‹ กลับหน้าแรก</a>
+</div>
+
+<!-- ตัวรถ SVG (เหมือนหน้าแรก) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="sedan" viewBox="0 0 300 120">
+    <path d="M14 90 L24 70 Q30 62 44 60 L90 54 Q118 20 150 18 Q190 16 214 40 L244 56 L274 62 Q288 66 288 80 L288 90 Z" fill="currentColor"/>
+    <path d="M112 50 Q132 28 154 27 Q186 26 202 46 Z" fill="#1c2430" opacity=".85"/>
+    <circle cx="80" cy="92" r="21" fill="#15191f"/><circle cx="80" cy="92" r="9" fill="#8b94a0"/>
+    <circle cx="226" cy="92" r="21" fill="#15191f"/><circle cx="226" cy="92" r="9" fill="#8b94a0"/>
+  </symbol>
+  <symbol id="suv" viewBox="0 0 300 120">
+    <path d="M14 92 L18 58 Q20 48 34 46 L76 42 L94 18 Q98 14 110 14 L224 14 Q234 14 240 22 L256 46 L278 52 Q290 56 290 70 L290 92 Z" fill="currentColor"/>
+    <path d="M102 24 L220 24 L240 44 L90 44 Z" fill="#1c2430" opacity=".85"/>
+    <circle cx="78" cy="94" r="23" fill="#15191f"/><circle cx="78" cy="94" r="10" fill="#8b94a0"/>
+    <circle cx="228" cy="94" r="23" fill="#15191f"/><circle cx="228" cy="94" r="10" fill="#8b94a0"/>
+  </symbol>
+  <symbol id="pickup" viewBox="0 0 300 120">
+    <path d="M12 92 L14 64 Q16 56 28 54 L60 50 L84 24 Q90 18 102 18 L152 18 Q160 18 164 26 L172 52 L286 52 Q292 52 292 60 L292 92 Z" fill="currentColor"/>
+    <path d="M94 28 L152 28 L160 50 L74 50 Z" fill="#1c2430" opacity=".85"/>
+    <circle cx="70" cy="94" r="22" fill="#15191f"/><circle cx="70" cy="94" r="9" fill="#8b94a0"/>
+    <circle cx="234" cy="94" r="22" fill="#15191f"/><circle cx="234" cy="94" r="9" fill="#8b94a0"/>
+  </symbol>
+</svg>
+
+<main class="layout">
+  <div class="stage">
+    <div class="carwrap">
+      <span class="tag t1" id="f0"></span><span class="tag t2" id="f1"></span>
+      <svg id="car" viewBox="0 0 300 120" role="img"><use id="use"/></svg>
+      <span class="tag t3" id="f2"></span><span class="tag t4" id="f3"></span>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <h1 id="name"></h1>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabCash" aria-selected="true">เงินสด</button>
+      <button role="tab" id="tabHire" aria-selected="false">ผ่อนชำระ</button>
+    </div>
+
+    <div class="box">
+      <div class="stats">
+        <div><b id="sYear"></b><span>ปีรถ</span></div>
+        <div><b id="sKm"></b><span>เลขไมล์ (กม.)</span></div>
+        <div><b id="sGear"></b><span>เกียร์</span></div>
+      </div>
+      <div id="variants"></div>
+    </div>
+
+    <div class="box" id="hireBox" hidden>
+      <h2>แผนผ่อนชำระ</h2>
+      <label class="field">เงินดาวน์
+        <select id="down"><option value="0">0%</option><option value="0.1" selected>10%</option><option value="0.2">20%</option><option value="0.3">30%</option></select>
+      </label>
+      <label class="field">จำนวนงวด
+        <select id="months"><option>48</option><option selected>60</option><option>72</option><option>84</option></select>
+      </label>
+      <p class="note">ตัวอย่างคำนวณที่ดอกเบี้ย 2.49% ต่อปี (คงที่) ราคาจริงขึ้นกับการอนุมัติของไฟแนนซ์</p>
+    </div>
+
+    <div class="box">
+      <h2>สีตัวรถ</h2>
+      <div class="rowline"><span id="colName"></span><span>ไม่มีค่าใช้จ่ายเพิ่ม</span></div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+  </aside>
+</main>
+
+<div class="bar">
+  <div><h3 id="bName"></h3><small id="bSub"></small></div>
+  <div style="display:flex;align-items:center;gap:18px">
+    <div class="price"><div id="bPrice"></div><small id="bLabel"></small></div>
+    <button class="go" id="order">สั่งจองเลย</button>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <form id="form">
+    <h2>ขอจองรถคันนี้</h2>
+    <p id="sum"></p>
+    <input id="fname" placeholder="ชื่อ-นามสกุล" required>
+    <input id="fphone" type="tel" placeholder="เบอร์โทร" required pattern="[0-9\- ]{9,}">
+    <button class="go" style="width:100%">ส่งข้อมูลการจอง</button>
+    <button type="button" class="close" id="cancel">ยกเลิก</button>
+  </form>
+</dialog>
+
+<script>
+  /* ===== ข้อมูลรถ: ลำดับต้องตรงกับสไลด์ในหน้าแรก (คันที่ 1, 2, 3) ===== */
+  const cars = [
+    { name:"Honda City Turbo", shape:"sedan", year:2020, km:42000, gear:"อัตโนมัติ",
+      feats:["เทอร์โบ 1.0 ลิตร","ตรวจสภาพ 100 จุด","ประกันชั้น 1 ฟรี 1 ปี","รับประกัน 1 ปี"],
+      variants:[{n:"S",s:"เกียร์อัตโนมัติ",p:429000},{n:"SV",s:"ออพชันครบ",p:469000},{n:"RS",s:"รุ่นท็อป สปอร์ต",p:519000}] },
+    { name:"Tesla Nova X", shape:"suv", year:2024, km:12000, gear:"ไฟฟ้า",
+      feats:["SUV 7 ที่นั่ง","พลังไฟฟ้า 100%","ดีไซน์ล้ำสมัย","รับประกัน 1 ปี"],
+      variants:[{n:"Standard",s:"ขับเคลื่อนล้อหลัง",p:1719000},{n:"Long Range",s:"ระยะทางไกล",p:1849000},{n:"Performance",s:"ขับเคลื่อนสี่ล้อ",p:1999000}] },
+    { name:"NIGHT REAPER X", shape:"sedan", year:2023, km:18000, gear:"อัตโนมัติ",
+      feats:["ราชันย์แห่งรัตติกาล","ตรวจสภาพ 100 จุด","ไมล์น้อย","รับประกัน 1 ปี"],
+      variants:[{n:"Night",s:"รุ่นมาตรฐาน",p:890000},{n:"Night Plus",s:"ออพชันเต็ม",p:990000}] }
+  ];
+  const colors = [
+    {n:"เทาสเตลธ์",c:"#4a4d55"},{n:"ขาวมุก",c:"#e9ecef"},{n:"ดำ",c:"#1b1c1f"},
+    {n:"น้ำเงิน",c:"#3f6fb5"},{n:"เงิน",c:"#aeb3b9"},{n:"แดง",c:"#b5121b"}
+  ];
+
+  const $ = s => document.querySelector(s);
+  const fmt = n => Math.round(n).toLocaleString('th-TH');
+  const id = Math.min(Math.max(+new URLSearchParams(location.search).get('car') || 0, 0), cars.length - 1);
+  const car = cars[id];
+  let vi = 0, ci = 0, hire = false;
+
+  function monthly(price){
+    const loan = price * (1 - +$('#down').value), m = +$('#months').value;
+    return loan * (1 + 0.0249 * m / 12) / m;
+  }
+
+  function render(){
+    const v = car.variants[vi], col = colors[ci];
+    document.title = car.name + ' | ใจดีมอเตอร์';
+    $('#name').textContent = car.name;
+    $('#use').setAttribute('href', '#' + car.shape);
+    $('#car').style.color = col.c;
+    car.feats.forEach((t, i) => $('#f' + i).textContent = t);
+    $('#sYear').textContent = car.year;
+    $('#sKm').textContent = fmt(car.km);
+    $('#sGear').textContent = car.gear;
+
+    $('#variants').innerHTML = car.variants.map((x, i) => `
+      <button class="opt" data-i="${i}" aria-pressed="${i === vi}">
+        <div class="row"><span>${car.name} <em>${x.n}</em></span><span>฿${fmt(x.p)}</span></div>
+        <small>${x.s}</small>
+      </button>`).join('');
+
+    $('#swatches').innerHTML = colors.map((c, i) =>
+      `<button class="sw" data-i="${i}" style="background:${c.c}" aria-label="${c.n}" aria-pressed="${i === ci}"></button>`).join('');
+    $('#colName').textContent = col.n;
+
+    $('#tabCash').setAttribute('aria-selected', !hire);
+    $('#tabHire').setAttribute('aria-selected', hire);
+    $('#hireBox').hidden = !hire;
+
+    $('#bName').textContent = car.name + ' ' + v.n;
+    $('#bSub').textContent = `${col.n} · ปี ${car.year} · ${fmt(car.km)} กม.` + (hire ? ` · ดาวน์ ${+$('#down').value * 100}% · ${$('#months').value} งวด` : '');
+    $('#bPrice').textContent = hire ? '฿' + fmt(monthly(v.p)) + ' / เดือน' : '฿' + fmt(v.p);
+    $('#bLabel').textContent = hire ? 'ประมาณการ' : 'ราคาเงินสด';
+  }
+
+  $('#variants').onclick = e => { const b = e.target.closest('.opt'); if (b){ vi = +b.dataset.i; render(); } };
+  $('#swatches').onclick = e => { const b = e.target.closest('.sw'); if (b){ ci = +b.dataset.i; render(); } };
+  $('#tabCash').onclick = () => { hire = false; render(); };
+  $('#tabHire').onclick = () => { hire = true; render(); };
+  $('#down').onchange = $('#months').onchange = render;
+
+  /* ===== ปุ่มสั่งจอง -> ฟอร์มกรอกชื่อ/เบอร์ ===== */
+  $('#order').onclick = () => {
+    $('#sum').textContent = $('#bName').textContent + ' · ' + colors[ci].n + ' · ' + $('#bPrice').textContent;
+    $('#dlg').showModal();
+  };
+  $('#cancel').onclick = () => $('#dlg').close();
+  $('#form').onsubmit = e => {
+    e.preventDefault();
+    // ตอนนี้ยังไม่ได้ส่งข้อมูลไปที่ไหน (ดูหมายเหตุด้านล่าง)
+    $('#form').innerHTML = `<h2>ขอบคุณคุณ ${$('#fname').value}</h2>
+      <p>ทางร้านจะติดต่อกลับที่เบอร์ ${$('#fphone').value} โดยเร็วที่สุด</p>
+      <button type="button" class="go" style="width:100%" onclick="dlg.close()">ปิด</button>`;
+  };
+  render();
+</script>
+</body>
+</html>
